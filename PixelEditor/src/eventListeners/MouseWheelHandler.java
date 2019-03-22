@@ -10,13 +10,25 @@ import panels.DrawPanel;
  * @version 1.0
  * @since 1.0
  */
-public class MouseWheelHandler extends EventsWrapper implements MouseWheelListener{
+public class MouseWheelHandler implements MouseWheelListener{
+
+	private DrawPanel drawPanel;
+
+	/**
+	 * 
+	 * @param drawPanel the drawPanel where this handler is going to be applied to
+	 * @since 1.0
+	 */
+	public MouseWheelHandler(DrawPanel drawPanel){
+		this.drawPanel = drawPanel;
+	}
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent event) {
 		int scale = drawPanel.getCurrentScale();
 		Point newMin = null; 
 		Point newMax = null;
+		Pair<Integer,Integer> tileSize = drawPanel.getTileSize();
 		
 		if (event.getWheelRotation() < 0 && scale < DrawPanel.MAX_SCALE){ 
 			//mouse wheel up, zoom in

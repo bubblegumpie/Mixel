@@ -1,7 +1,6 @@
 package eventListeners;
 
 import image.Pixel;
-import panels.DrawPanel;
 
 /**
  * 
@@ -10,12 +9,11 @@ import panels.DrawPanel;
  * @version 1.0
  * @since 1.0
  */
-public class EventsWrapper {
+public abstract class EventsWrapper {
 	protected static boolean shiftCombination;//if the user holds the shift key this is set 
 	//to true. This is used to hotkeys such as shift+0
 	protected static boolean controlCombination;
 	protected static boolean rectTool; //true if the rect tool is being used
-	public static DrawPanel drawPanel;
 	
 	/**
 	 * 

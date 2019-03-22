@@ -1,8 +1,6 @@
 import java.awt.*;
 import java.awt.event.KeyListener;
 import javax.swing.*;
-
-import eventListeners.EventsWrapper;
 import eventListeners.KeyboardHandler;
 import panels.ChooseColorPanel;
 import panels.DrawPanel;
@@ -32,11 +30,7 @@ public class Window extends JFrame{
 		drawPanel = new DrawPanel();
 		this.add(drawPanel);
 		this.add(new ChooseColorPanel());
-
-		//all of the handlers reference to this draw panel
-		EventsWrapper.drawPanel = drawPanel; 
-
-		addEventToAllComponents(this,new KeyboardHandler());
+		addEventToAllComponents(this,new KeyboardHandler(drawPanel));
 		this.setVisible(true);
 	}
 
