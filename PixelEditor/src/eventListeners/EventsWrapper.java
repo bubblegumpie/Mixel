@@ -15,7 +15,7 @@ public class EventsWrapper {
 	//to true. This is used to hotkeys such as shift+0
 	protected static boolean controlCombination;
 	protected static boolean rectTool; //true if the rect tool is being used
-	public static DrawPanel drawPanel;
+	public static DrawPanel drawPanel; //this will be shared between all handlers
 	
 	/**
 	 * 
