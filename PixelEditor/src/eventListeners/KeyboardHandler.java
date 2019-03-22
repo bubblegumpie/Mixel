@@ -15,17 +15,6 @@ public class KeyboardHandler extends EventsWrapper implements KeyListener{
 	
 	private final static int ERASE = KeyEvent.VK_DELETE;
 	private final static int CONTROL = KeyEvent.VK_CONTROL;
-	private DrawPanel drawPanel;
-	
-	/**
-	 * 
-	 * @param drawPanel the draw panel of the main frame
-	 * @since 1.0
-	 */
-	public KeyboardHandler(DrawPanel drawPanel){
-		this.drawPanel = drawPanel;
-	}
-	
 	
 	@Override
 	public void keyPressed(KeyEvent event) {
@@ -60,14 +49,19 @@ public class KeyboardHandler extends EventsWrapper implements KeyListener{
 		else if(event.getKeyCode() == CONTROL){
 			controlCombination = true;
 		}else if(controlCombination && event.getKeyCode() == KeyEvent.VK_Z
-				&& drawPanel.previousAlterarion.peek() != null){
+				&& drawPanel.previousAlterarion.size() > 0){
 			//undo
+			System.out.println(
+					samePixels(drawPanel.pixels,drawPanel.previousAlterarion.peek()) + "");
 			Pixel[][] newPixels = drawPanel.previousAlterarion.pop();
+			
 			for(int i = 0;i < newPixels.length;i++){
 				for(int j = 0; j < newPixels[i].length; j++){
 						drawPanel.pixels[i][j] = newPixels[i][j];
 				}
 			}
+			System.out.println("here1");
+			
 		}
 	}
 
