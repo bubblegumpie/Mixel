@@ -2,6 +2,7 @@ package panels;
 import javax.swing.*;
 import eventListeners.*;
 import general.Pair;
+import general.Arrays;
 import image.Pixel;
 import java.awt.*;
 import java.awt.event.*;
@@ -52,8 +53,8 @@ public class DrawPanel extends JComponent{
 	private double translateX,translateY;
 
 	public DrawPanel(){
-		width = 20;
-		height = 20;
+		width = 4;
+		height = 4;
 		spacing = 1;
 		tileWidth =  WIDTH / width;
 		tileHeight =  HEIGHT / height;
@@ -79,11 +80,13 @@ public class DrawPanel extends JComponent{
 		for(int i = 0; i < pixels.length; i++){
 			for(int j = 0; j < pixels[i].length; j++)
 				pixels[i][j] = new Pixel(255,255,255,0); // transparent		
-
 		}
-		this.addMouseListener(new MouseClickHandler(this));
-		this.addMouseMotionListener(new MouseMotionHandler(this));
-		this.addMouseWheelListener(new MouseWheelHandler(this));
+
+		previousAlterarion.push(Arrays.copyPixelMatrix(pixels));
+		
+		this.addMouseListener(new MouseClickHandler());
+		this.addMouseMotionListener(new MouseMotionHandler());
+		this.addMouseWheelListener(new MouseWheelHandler());
 
 		setDoubleBuffered(true);
 	}

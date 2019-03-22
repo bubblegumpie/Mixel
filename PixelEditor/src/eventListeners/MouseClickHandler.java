@@ -2,7 +2,7 @@ package eventListeners;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import panels.DrawPanel;
+import general.Arrays;
 /**
  * Handles the mouse clicks, etc
  * @author Sasori
@@ -11,20 +11,9 @@ import panels.DrawPanel;
  */
 public class MouseClickHandler extends EventsWrapper implements MouseListener{
 
-	private DrawPanel drawPanel;
 	private static final int LEFT_MOUSE_BUTTON = MouseEvent.BUTTON1;
 	private static final int MIDDLE_MOUSE_BUTTON = MouseEvent.BUTTON2;
 	private static final int RIGHT_MOUSE_BUTTON = MouseEvent.BUTTON3;
-
-	/**
-	 * 
-	 * @param drawPanel the drawPanel where this handler is going to be applied to
-	 * @since 1.0
-	 */
-	public MouseClickHandler(DrawPanel drawPanel){
-		this.drawPanel = drawPanel;
-	}
-
 
 	@Override
 	public void mouseClicked(MouseEvent event) {
@@ -92,9 +81,7 @@ public class MouseClickHandler extends EventsWrapper implements MouseListener{
 			}
 			rectTool = false;
 		}
-		if(drawPanel.previousAlterarion.size() != 0){
-			if(!samePixels(drawPanel.pixels,drawPanel.previousAlterarion.peek()))
-				drawPanel.previousAlterarion.push(drawPanel.pixels);
-		}
+		
+		drawPanel.previousAlterarion.push(Arrays.copyPixelMatrix(drawPanel.pixels));
 	}
 }
