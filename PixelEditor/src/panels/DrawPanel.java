@@ -413,7 +413,7 @@ public class DrawPanel extends JComponent{
 	/**
 	 * 
 	 * @param add if this is true it means that the operation is supposed 
-	 * (it may not be necessary to add it) the pixels onto the change stack, 
+	 * (it may not be necessary) to add the pixels onto the change stack, 
 	 * <br> if not it will undo the previous operation if possible 
 	 * @since 1.0
 	 */
