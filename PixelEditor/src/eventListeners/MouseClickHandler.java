@@ -2,7 +2,7 @@ package eventListeners;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import general.Arrays;
+import general.PixelArrays;
 /**
  * Handles the mouse clicks, etc
  * @author Sasori
@@ -19,8 +19,13 @@ public class MouseClickHandler extends EventsWrapper implements MouseListener{
 	public void mouseClicked(MouseEvent event) {
 		drawPanel.mouseX = event.getX();
 		drawPanel.mouseY = event.getY();
-		drawPanel.setPixel(event);
-		drawPanel.previousAlterarion.push(drawPanel.pixels);
+		if(fillTool){ //fill tool is active
+			drawPanel.fillPixels();
+			drawPanel.handleUndoStackChange(true);
+		}else{
+			drawPanel.handleUndoStackChange(true);
+			drawPanel.setPixel(event);
+		}
 	}
 
 	@Override
@@ -48,21 +53,19 @@ public class MouseClickHandler extends EventsWrapper implements MouseListener{
 	@Override
 	public void mouseReleased(MouseEvent event) {
 		if(rectTool){
+			drawPanel.handleUndoStackChange(true);
+			
 			Point destination = drawPanel.getPixelPositionBasedOnMouse();
 
-			System.out.println("Start: " + startingPoint.toString());
-			System.out.println("End: " + destination.toString());
 			int xOffset = Math.abs(startingPoint.x - destination.x);
 			int yOffset = Math.abs(startingPoint.y - destination.y);
-			System.out.println("xOffset: " + xOffset + "\nyOffset: " + yOffset);
 
 			int translateX = startingPoint.x > destination.x ? 1 : -1;
 			//if this is set to 1 it means to move left, -1 otherwise
 			int translateY = startingPoint.y > destination.y ? 1 : -1;
 			//if this is set to 1 it means to move up, -1 otherwise
-			System.out.println("translateX: " + translateX + "\ntranslateY: "
-					+ translateY);
-			//fill horizontals
+		
+			//fill horizontal pixels
 			for(int x = 0; x <= xOffset; x++){
 				drawPanel.pixels[startingPoint.x - x*translateX][startingPoint.y]
 						= drawPanel.getCurrentPixelColor().clone();
@@ -70,7 +73,8 @@ public class MouseClickHandler extends EventsWrapper implements MouseListener{
 						[startingPoint.y + yOffset*translateY*-1]
 								= drawPanel.getCurrentPixelColor().clone();
 			}
-
+			
+			//fill vertical pixels
 			for(int y = 0; y <= yOffset; y++){
 				drawPanel.pixels[startingPoint.x]
 						[startingPoint.y - y*translateY]
@@ -79,9 +83,13 @@ public class MouseClickHandler extends EventsWrapper implements MouseListener{
 						[startingPoint.y - y*translateY]
 								= drawPanel.getCurrentPixelColor().clone();
 			}
+			
 			rectTool = false;
+		}else if(mouseBeingPressed){
+			//only puts into the stacks the whole alteration during the mouse drag
+			mouseBeingPressed = false;
+			drawPanel.handleUndoStackChange(true);
+			
 		}
-		
-		drawPanel.previousAlterarion.push(Arrays.copyPixelMatrix(drawPanel.pixels));
 	}
 }

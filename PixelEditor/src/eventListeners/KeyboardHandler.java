@@ -1,8 +1,6 @@
 package eventListeners;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-
-import image.Pixel;
 import panels.*;
 /**
  * This class is responsible for handling all the keyboard input of the application
@@ -15,6 +13,7 @@ public class KeyboardHandler extends EventsWrapper implements KeyListener{
 	
 	private final static int ERASE = KeyEvent.VK_DELETE;
 	private final static int CONTROL = KeyEvent.VK_CONTROL;
+	private final static int FILL_KEY = KeyEvent.VK_B;
 	
 	@Override
 	public void keyPressed(KeyEvent event) {
@@ -48,29 +47,22 @@ public class KeyboardHandler extends EventsWrapper implements KeyListener{
 			drawPanel.setCurrentPixelColor(DrawPanel.ERASE);
 		else if(event.getKeyCode() == CONTROL){
 			controlCombination = true;
-		}else if(controlCombination && event.getKeyCode() == KeyEvent.VK_Z
-				&& drawPanel.previousAlterarion.size() > 0){
+		}else if(controlCombination && event.getKeyCode() == KeyEvent.VK_Z){
 			//undo
-			System.out.println(
-					samePixels(drawPanel.pixels,drawPanel.previousAlterarion.peek()) + "");
-			Pixel[][] newPixels = drawPanel.previousAlterarion.pop();
-			
-			for(int i = 0;i < newPixels.length;i++){
-				for(int j = 0; j < newPixels[i].length; j++){
-						drawPanel.pixels[i][j] = newPixels[i][j];
-				}
-			}
-			System.out.println("here1");
-			
+			drawPanel.handleUndoStackChange(false);
+		}else if(event.getKeyCode() == FILL_KEY){ //fill option
+			fillTool = true;
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent event) {
-		shiftCombination = false; //this happens when a key is released.
-		//such as shift. By this means, it is no longer a hotkeys because there won't be
+		//this happens when a key is released.
+		//such as shift. By this means, it is no longer a hotkey because there won't be
 		//more than two being pressed at the same time
+		shiftCombination = false; 
 		rectTool = false;
+		fillTool = false;
 	}
 
 	@Override

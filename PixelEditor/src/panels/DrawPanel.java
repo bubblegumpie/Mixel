@@ -2,11 +2,11 @@ package panels;
 import javax.swing.*;
 import eventListeners.*;
 import general.Pair;
-import general.Arrays;
+import general.PixelArrays;
 import image.Pixel;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
 import java.util.Stack;
 /**
  * This class represents the drawing panel where the draw of the pixels will appear
@@ -45,16 +45,19 @@ public class DrawPanel extends JComponent{
 	//both of these points are use to know where the user scaled the draw
 	//the representation of the draw starts an min.x and min.y and ends
 	//at max.x and max.y
-	public Stack<Pair<Point,Point>> previousPoints;
-	public Stack<Pixel[][]> previousAlterarion; //allows to go back (ctrl+z)
+	public Stack<Pair<Point,Point>> previousPoints; //the previous points before
+	//zooming in
+	private Stack<Pixel[][]> previousChanges; //allows to go back (ctrl+z)
+	private int numberOfChanges; //when numberOfChanges - 
+	//previousChanges.size() == 1 we add the pixels onto the stack
 
 	private int currentScale; //represents the current zoom scale
 	private int lastPressedKey = 0; //the last pressed key of the keyboard
 	private double translateX,translateY;
 
 	public DrawPanel(){
-		width = 4;
-		height = 4;
+		width = 30;
+		height = 30;
 		spacing = 1;
 		tileWidth =  WIDTH / width;
 		tileHeight =  HEIGHT / height;
@@ -65,7 +68,7 @@ public class DrawPanel extends JComponent{
 		min = new Point(0,0);
 		max = new Point(width,height);
 		previousPoints = new Stack<>();
-		previousAlterarion = new Stack<>();
+		previousChanges = new Stack<>();
 
 		pixelKeyboardColors = new Pixel[10];
 		for(int i = 0; i < pixelKeyboardColors.length; i++)
@@ -82,8 +85,8 @@ public class DrawPanel extends JComponent{
 				pixels[i][j] = new Pixel(255,255,255,0); // transparent		
 		}
 
-		previousAlterarion.push(Arrays.copyPixelMatrix(pixels));
-		
+		previousChanges.push(PixelArrays.copyPixelMatrix(pixels));
+
 		this.addMouseListener(new MouseClickHandler());
 		this.addMouseMotionListener(new MouseMotionHandler());
 		this.addMouseWheelListener(new MouseWheelHandler());
@@ -119,7 +122,6 @@ public class DrawPanel extends JComponent{
 			for(int j = min.y; j < max.y; j++){
 				int minY = y * tileHeight;
 				int rectHeight = tileHeight -2*spacing;
-				y++;
 
 				if(minY + rectHeight > WIDTH)
 					break;
@@ -129,7 +131,7 @@ public class DrawPanel extends JComponent{
 						pixel.getBlue(),pixel.getAlpha());
 				g2.setPaint(p);
 				g2.fillRect(minX,minY,rectWidth,rectHeight);
-				
+
 				//see if the pixel is being hovered
 				if(hoverLocation[i][j]){
 					g2.setColor(new Color(HOVER.getRed(),HOVER.getGreen()
@@ -145,6 +147,7 @@ public class DrawPanel extends JComponent{
 				//vertical lines
 				g2.drawLine(minX, minY + rectHeight + spacing, minX + rectWidth+spacing, 
 						minY + rectHeight + spacing);
+				y++;
 
 			}
 			y = 0;
@@ -407,4 +410,135 @@ public class DrawPanel extends JComponent{
 		max.y = newMax.y;
 	}
 
+	/**
+	 * 
+	 * @param add if this is true it means that the operation is supposed 
+	 * (it may not be necessary to add it) the pixels onto the change stack, 
+	 * <br> if not it will undo the previous operation if possible 
+	 * @since 1.0
+	 */
+	public void handleUndoStackChange(boolean add){
+		if(add){
+			numberOfChanges++;
+			if(previousChanges.size() == 0){//adds the initial state
+				Pixel[][] newPixels = new Pixel[pixels.length][pixels[0].length];
+				for(int i = 0;i < pixels.length;i++){
+					for(int j = 0; j < pixels[i].length; j++){
+						newPixels[i][j] = ERASE; //transparent
+					}
+				}
+				previousChanges.push(PixelArrays.copyPixelMatrix(newPixels));
+			}
+
+			if(numberOfChanges - previousChanges.size() == 1)
+				//put the last one into the stack
+				previousChanges.push(PixelArrays.copyPixelMatrix(pixels));			
+
+		}else{ //undo
+			if(previousChanges.size() > 0){
+				numberOfChanges--; //decrease the changes
+				Pixel[][] newPixels = previousChanges.pop(); //pops the last change
+				
+				for(int i = 0;i < newPixels.length;i++){
+					for(int j = 0; j < newPixels[i].length; j++){
+						pixels[i][j] = newPixels[i][j];
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * fills all the available pixels. That is, all the pixels that
+	 * are transparent and that are not being surrounded by others
+	 * @since 1.0
+	 */
+	public void fillPixels(){
+		Point clickedPoint = this.getPixelPositionBasedOnMouse();		
+		fillTransparentPixels(clickedPoint);
+	}
+	
+	/**
+	 * 
+	 * @param startingPoint the starting point of the fill
+	 * <p>
+	 * fills all the available pixels. That is, all the pixels that
+	 * are transparent and that are not being surrounded by others.
+	 * It searches all the neighbors of which point and paints it
+	 * if the position meets the requirements
+	 * </p>
+	 * @since 1.0
+	 */
+	private void fillTransparentPixels(Point startingPoint){
+		ArrayList<Point> neighbors = getNeighbors(startingPoint);
+		//the starting point is always a transparent so it must
+		//be filled
+		pixels[startingPoint.x][startingPoint.y] = currentPixelColor.clone();
+		
+		for(int i = 0; i < neighbors.size(); i++){
+			Point neighbor = neighbors.get(i);
+			if ((pixels[neighbor.x][neighbor.y]).equals(ERASE)){
+				//see all of the neighbor neighbors. if they are 
+				//transparent they should also be filled
+				pixels[neighbor.x][neighbor.y] = currentPixelColor.clone();
+				ArrayList<Point> neighborAux = getNeighbors(neighbor);
+				for(Point p: neighborAux){
+					if(pixels[p.x][p.y].equals(ERASE))
+						fillTransparentPixels(neighbor);
+				}
+				
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * @param p the point
+	 * @return all the neighbors of this point
+	 *  the maximum neighbors a point can have is four
+	 *	[p.x - 1][p.y] 
+	 *	[p.x][p.y - 1] 
+	 *	[p.x + 1][p.y] 
+	 *	[p.x][p.y + 1]
+	 * @since 1.0 
+	 */
+	private ArrayList<Point> getNeighbors(Point p){
+		ArrayList<Point> result = new ArrayList<>();
+		if(p.x == 0 && p.y == 0){//top left corner of the screen
+			result.add(new Point(p.x,p.y + 1));
+			result.add(new Point(p.x + 1,p.y));
+		}else if(p.x == width-1 && p.y == 0){//top right corner of the screen
+			result.add(new Point(p.x,p.y + 1));
+			result.add(new Point(p.x - 1,p.y));
+		}else if(p.x == 0 && p.y == height-1){//bottom left corner of the screen
+			result.add(new Point(p.x,p.y - 1));
+			result.add(new Point(p.x + 1,p.y));
+		}else if (p.x == width-1 && p.y == height-1){//bottom right corner of the screen
+			result.add(new Point(p.x,p.y - 1));
+			result.add(new Point(p.x - 1,p.y));
+		}else if(p.x == 0){ //left side
+			result.add(new Point(p.x,p.y - 1));
+			result.add(new Point(p.x,p.y + 1));
+			result.add(new Point(p.x+1,p.y));
+		}else if (p.x == width - 1){ //right side
+			result.add(new Point(p.x,p.y - 1));
+			result.add(new Point(p.x,p.y + 1));
+			result.add(new Point(p.x - 1,p.y));
+		}else if(p.y == 0){ //top side
+			result.add(new Point(p.x + 1,p.y));
+			result.add(new Point(p.x - 1,p.y));
+			result.add(new Point(p.x,p.y + 1));
+		}else if(p.y == height - 1){ //bottom side
+			result.add(new Point(p.x + 1,p.y));
+			result.add(new Point(p.x - 1,p.y));
+			result.add(new Point(p.x,p.y +-1));
+		}else{ //middle
+			result.add(new Point(p.x + 1,p.y));
+			result.add(new Point(p.x - 1,p.y));
+			result.add(new Point(p.x,p.y + 1));
+			result.add(new Point(p.x,p.y - 1));
+		}
+		return result;
+	}
 }

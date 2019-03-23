@@ -13,8 +13,14 @@ public class MouseMotionHandler extends EventsWrapper implements MouseMotionList
 	public void mouseDragged(MouseEvent event) {
 		drawPanel.mouseX = event.getX();
 		drawPanel.mouseY = event.getY();
-		if(!rectTool)
+		mouseBeingPressed = true;
+		if(!rectTool){
+			//there is no need to add this to the previous alteration
+			//we only need to add the WHOLE alteration, that is:
+			//all the pixels changed after the release of the mouse
 			drawPanel.setPixel(event);
+			
+		}
 		
 	}
 
