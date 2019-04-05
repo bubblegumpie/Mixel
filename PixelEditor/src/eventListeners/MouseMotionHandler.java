@@ -1,6 +1,9 @@
 package eventListeners;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+
+import general.PixelArrays;
+import image.Pixel;
 /**
  * Handles the mouse drag
  * @author Sasori
@@ -8,20 +11,23 @@ import java.awt.event.MouseMotionListener;
  * @since 1.0
  */
 public class MouseMotionHandler extends EventsWrapper implements MouseMotionListener{
-	
+
 	@Override
 	public void mouseDragged(MouseEvent event) {
 		drawPanel.mouseX = event.getX();
 		drawPanel.mouseY = event.getY();
 		mouseBeingPressed = true;
-		if(!rectTool){
+		if(rectTool)
+			//lets see the changes of the rect tool
+			drawPanel.rectTool(rectToolStartingPoint);
+		else
 			//there is no need to add this to the previous alteration
 			//we only need to add the WHOLE alteration, that is:
 			//all the pixels changed after the release of the mouse
 			drawPanel.setPixel(event);
-			
-		}
-		
+
+
+
 	}
 
 	@Override
@@ -31,5 +37,5 @@ public class MouseMotionHandler extends EventsWrapper implements MouseMotionList
 		drawPanel.mouseY = event.getY();
 		drawPanel.setHoverLocation(event);
 	}
-		
+
 }

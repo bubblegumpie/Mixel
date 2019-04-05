@@ -6,6 +6,8 @@ import general.PixelArrays;
 import image.Pixel;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Stack;
 /**
@@ -22,6 +24,8 @@ public class DrawPanel extends JComponent{
 	public static final int WIDTH = 600; //the total width of this panel
 	public static final int HEIGHT = 600; //the total height of this panel
 	public static final int MAX_SCALE = 5; //the max scale of the draw
+	
+	//private static final float DELTA = 0.001f; //the delta is used to compare two floats
 
 	private int width; //the width of the draw
 	private int height; //the height of the draw
@@ -45,31 +49,36 @@ public class DrawPanel extends JComponent{
 	//both of these points are use to know where the user scaled the draw
 	//the representation of the draw starts an min.x and min.y and ends
 	//at max.x and max.y
-	public Stack<Pair<Point,Point>> previousPoints; //the previous points before
-	//zooming in
 	private Stack<Pixel[][]> previousChanges; //allows to go back (ctrl+z)
-	private int numberOfChanges; //when numberOfChanges - 
-	//previousChanges.size() == 1 we add the pixels onto the stack
+	private Stack<Pixel[][]> redoStack; //contains the possible redos (ctrl+y)
 
 	private int currentScale; //represents the current zoom scale
 	private int lastPressedKey = 0; //the last pressed key of the keyboard
-	private double translateX,translateY;
-
-	public DrawPanel(){
-		width = 30;
-		height = 30;
+	
+	/**
+	 * 
+	 * @param width the width of the image
+	 * @param height the height of the image
+	 * <p>
+	 * Creates the drawing panel where the user can make a pixel art
+	 * </p>
+	 * @since 1.0
+	 */
+	public DrawPanel(int width, int height){
+		super();
+		this.width = width;
+		this.height = height;
 		spacing = 1;
 		tileWidth =  WIDTH / width;
 		tileHeight =  HEIGHT / height;
 		mouseX = -1;
 		mouseY = -1;
-		translateX = translateY = 0;
 		currentScale = 1;
 		min = new Point(0,0);
-		max = new Point(width,height);
-		previousPoints = new Stack<>();
+		max = new Point(width-1,height-1);
 		previousChanges = new Stack<>();
-
+		redoStack = new Stack<>();
+		
 		pixelKeyboardColors = new Pixel[10];
 		for(int i = 0; i < pixelKeyboardColors.length; i++)
 			pixelKeyboardColors[i] = new Pixel(255,255,255,0); 
@@ -112,14 +121,14 @@ public class DrawPanel extends JComponent{
 
 
 		int x = 0,y = 0;
-		for(int i = min.x; i < max.x; i++){
+		for(int i = min.x; i <= max.x; i++){
 			int minX = tileWidth * x;
 			int rectWidth = tileWidth - 2*spacing;
 
 			if(minX + rectWidth > WIDTH)
 				break;
 
-			for(int j = min.y; j < max.y; j++){
+			for(int j = min.y; j <= max.y; j++){
 				int minY = y * tileHeight;
 				int rectHeight = tileHeight -2*spacing;
 
@@ -305,12 +314,12 @@ public class DrawPanel extends JComponent{
 	 */
 	public Point getPixelPositionBasedOnMouse(){
 		int x = 0,y = 0;
-		for(int i = min.x; i < max.x; i++){
-			for(int j = min.y; j < max.y; j++){
+		for(int i = min.x; i <= max.x; i++){
+			for(int j = min.y; j <= max.y; j++){
 				int minX = tileWidth * x;
 				int minY = y * tileHeight;
-				int rectWidth = tileWidth - 2*spacing;
-				int rectHeight = tileHeight -2*spacing;
+				int rectWidth = tileWidth; //no need to add the spacing
+				int rectHeight = tileHeight; //no need to add the spacing
 
 				if(mouseX >=  minX && mouseX <= rectWidth + minX
 						&& mouseY >= minY && mouseY <= rectHeight + minY)
@@ -419,7 +428,6 @@ public class DrawPanel extends JComponent{
 	 */
 	public void handleUndoStackChange(boolean add){
 		if(add){
-			numberOfChanges++;
 			if(previousChanges.size() == 0){//adds the initial state
 				Pixel[][] newPixels = new Pixel[pixels.length][pixels[0].length];
 				for(int i = 0;i < pixels.length;i++){
@@ -428,22 +436,43 @@ public class DrawPanel extends JComponent{
 					}
 				}
 				previousChanges.push(PixelArrays.copyPixelMatrix(newPixels));
-			}
-
-			if(numberOfChanges - previousChanges.size() == 1)
+			}else{
 				//put the last one into the stack
-				previousChanges.push(PixelArrays.copyPixelMatrix(pixels));			
+				previousChanges.push(PixelArrays.copyPixelMatrix(pixels));
+			}
 
 		}else{ //undo
 			if(previousChanges.size() > 0){
-				numberOfChanges--; //decrease the changes
+				redoStack.push(PixelArrays.copyPixelMatrix(pixels));
 				Pixel[][] newPixels = previousChanges.pop(); //pops the last change
-				
 				for(int i = 0;i < newPixels.length;i++){
 					for(int j = 0; j < newPixels[i].length; j++){
 						pixels[i][j] = newPixels[i][j];
 					}
 				}
+			}else{
+				for(int i = 0;i < pixels.length;i++){
+					for(int j = 0; j < pixels[i].length; j++){
+						pixels[i][j] = ERASE;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Redo the changes
+	 * @since 1.0
+	 */
+	public void redo() {
+		if(redoStack.size() > 0){
+			//redo
+			previousChanges.push(PixelArrays.copyPixelMatrix(pixels));
+			Pixel[][] newPixels = redoStack.pop();
+
+			for(int i = 0; i < pixels.length; i++){
+				for(int j = 0; j < pixels[i].length; j++)
+					pixels[i][j] = newPixels[i][j];
 			}
 		}
 	}
@@ -456,9 +485,13 @@ public class DrawPanel extends JComponent{
 	 */
 	public void fillPixels(){
 		Point clickedPoint = this.getPixelPositionBasedOnMouse();		
-		fillTransparentPixels(clickedPoint);
+		//if the clicked pixel is not a transparent one, the fill tool
+		//as no effect
+		if(pixels[clickedPoint.x][clickedPoint.y].equals(ERASE))
+			fillTransparentPixels(clickedPoint);
+
 	}
-	
+
 	/**
 	 * 
 	 * @param startingPoint the starting point of the fill
@@ -472,10 +505,10 @@ public class DrawPanel extends JComponent{
 	 */
 	private void fillTransparentPixels(Point startingPoint){
 		ArrayList<Point> neighbors = getNeighbors(startingPoint);
-		//the starting point is always a transparent so it must
+		//the starting point is always transparent so it must
 		//be filled
 		pixels[startingPoint.x][startingPoint.y] = currentPixelColor.clone();
-		
+
 		for(int i = 0; i < neighbors.size(); i++){
 			Point neighbor = neighbors.get(i);
 			if ((pixels[neighbor.x][neighbor.y]).equals(ERASE)){
@@ -487,11 +520,11 @@ public class DrawPanel extends JComponent{
 					if(pixels[p.x][p.y].equals(ERASE))
 						fillTransparentPixels(neighbor);
 				}
-				
+
 			}
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param p the point
@@ -541,4 +574,125 @@ public class DrawPanel extends JComponent{
 		}
 		return result;
 	}
+
+	/**
+	 * 
+	 * @param startingPoint the starting point of the rect tool
+	 * <p>
+	 * Creates the area for the rect tool
+	 * </p>
+	 * @since 1.0
+	 */
+	public void rectTool(Point startingPoint){
+		Point destination = getPixelPositionBasedOnMouse();
+		//resets the pixels in order to let the user see the changes of using
+		//the rect tool
+		pixels = PixelArrays.copyPixelMatrix(previousChanges.peek());
+
+		int xOffset = Math.abs(startingPoint.x - destination.x);
+		int yOffset = Math.abs(startingPoint.y - destination.y);
+
+		int translateX = startingPoint.x > destination.x ? 1 : -1;
+		//if this is set to 1 it means to move left, -1 otherwise
+		int translateY = startingPoint.y > destination.y ? 1 : -1;
+		//if this is set to 1 it means to move up, -1 otherwise
+
+		//fill horizontal pixels
+		for(int x = 0; x <= xOffset; x++){
+			pixels[startingPoint.x - x*translateX][startingPoint.y]
+					= getCurrentPixelColor().clone();
+			pixels[startingPoint.x - x*translateX] 
+					[startingPoint.y + yOffset*translateY*-1]
+							= getCurrentPixelColor().clone();
+		}
+
+		//fill vertical pixels
+		for(int y = 0; y <= yOffset; y++){
+			pixels[startingPoint.x]
+					[startingPoint.y - y*translateY]
+							= getCurrentPixelColor().clone();
+			pixels[startingPoint.x - xOffset*translateX]
+					[startingPoint.y - y*translateY]
+							= getCurrentPixelColor().clone();
+		}
+	}
+	
+//	/**
+//	 * 
+//	 * @param startingPoint the starting point of the circle tool
+//	 * <p>
+//	 * creates a circle within a the starting point and the current position of
+//	 * the mouse
+//	 * </p>
+//	 * @since 1.0
+//	 */
+//	public void circleTool(Point startingPoint){
+//		Point destination = getPixelPositionBasedOnMouse();
+//		//refresh the changes
+//		//pixels = PixelArrays.copyPixelMatrix(previousChanges.peek());
+//		
+//		int centerX = (Math.abs(startingPoint.x - destination.x)) / 2;
+//		int centerY = (Math.abs(startingPoint.y - destination.y)) / 2;
+//		Point center = new Point(centerX,centerY);
+//		int radius = distance(center,startingPoint) / 2;
+//		
+//		System.out.println("start: " + startingPoint.toString());
+//		System.out.println("end: " + destination.toString());
+//		System.out.println("center: " + center.toString());
+//		System.out.println("radius: " + radius);
+//		
+//		boolean [][] visited = new boolean[width][height];
+//		visited[startingPoint.x][startingPoint.y] = true;
+//		circlePixelsWithinRadius(startingPoint,radius,visited);
+//	}
+//	
+//	/**
+//	 * 
+//	 * @param startingPoint
+//	 * @param radius 
+//	 * <p>
+//	 * Circles all the pixels 
+//	 * </p>
+//	 * @since 1.0
+//	 */
+//	private void circlePixelsWithinRadius(Point startingPoint,int radius
+//			,boolean[][] visited){
+//		ArrayList<Point> neighbors = getNeighbors(startingPoint);
+//		//the starting point is always within the given radius
+//		//so it must be filled
+//		pixels[startingPoint.x][startingPoint.y] = currentPixelColor.clone();
+//		
+//		for(int i = 0; i < neighbors.size(); i++){
+//			Point p = neighbors.get(i);
+//			//see if the neighbor is within the give radius
+//			//if it is paint it and see its neighbors aswell
+//			int distance = distance(startingPoint,p);
+//			if(Math.abs(distance - radius) == 0 && !visited[p.x][p.y]){
+//				visited[p.x][p.y] = true;
+//				pixels[p.x][p.y] = currentPixelColor.clone();
+//				ArrayList<Point> pNeighbors = getNeighbors(p);
+//				for(Point aux: pNeighbors){
+//					if(Math.abs(distance - radius) == 0 && !visited[aux.x][aux.y]){
+//						visited[aux.x][aux.y] = true;
+//						circlePixelsWithinRadius(startingPoint,radius,visited);
+//					}
+//				}	
+//				
+//			}
+//		}
+//	}
+//	
+//	/**
+//	 * 
+//	 * @param p1
+//	 * @param p2
+//	 * @return calculates the distance between two points (p1 and p2)
+//	 * <br>
+//	 * The loss of precision is wanted
+//	 * </br>
+//	 * @since 1.0
+//	 */
+//	private int distance(Point p1,Point p2){
+//		return (int) (Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+//	}
 }

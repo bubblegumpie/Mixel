@@ -1,6 +1,10 @@
 package eventListeners;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+
+import javax.swing.JOptionPane;
+
+import general.ConvertIntoPNG;
 import panels.*;
 /**
  * This class is responsible for handling all the keyboard input of the application
@@ -11,9 +15,12 @@ import panels.*;
 public class KeyboardHandler extends EventsWrapper implements KeyListener{
 
 	
-	private final static int ERASE = KeyEvent.VK_DELETE;
-	private final static int CONTROL = KeyEvent.VK_CONTROL;
-	private final static int FILL_KEY = KeyEvent.VK_B;
+	private static final int ERASE = KeyEvent.VK_DELETE;
+	private static final int CONTROL = KeyEvent.VK_CONTROL;
+	private static final int FILL_KEY = KeyEvent.VK_B;
+	private static final int UNDO_KEY = KeyEvent.VK_Z;
+	private static final int REDO_KEY = KeyEvent.VK_Y;
+	private static final int SAVE_KEY = KeyEvent.VK_S;
 	
 	@Override
 	public void keyPressed(KeyEvent event) {
@@ -47,11 +54,18 @@ public class KeyboardHandler extends EventsWrapper implements KeyListener{
 			drawPanel.setCurrentPixelColor(DrawPanel.ERASE);
 		else if(event.getKeyCode() == CONTROL){
 			controlCombination = true;
-		}else if(controlCombination && event.getKeyCode() == KeyEvent.VK_Z){
+		}else if(controlCombination && event.getKeyCode() == UNDO_KEY){
 			//undo
 			drawPanel.handleUndoStackChange(false);
+		}else if(controlCombination && event.getKeyCode() == REDO_KEY){
+			//redo
+			drawPanel.redo();
 		}else if(event.getKeyCode() == FILL_KEY){ //fill option
 			fillTool = true;
+		}else if(event.getKeyCode() == SAVE_KEY && controlCombination){
+			String name = JOptionPane.showInputDialog("Choose the image's name");
+			ConvertIntoPNG.saveIntoFile(drawPanel.pixels, name + ".png",drawPanel);
+			JOptionPane.showMessageDialog(drawPanel, "File saved");
 		}
 	}
 
@@ -62,6 +76,8 @@ public class KeyboardHandler extends EventsWrapper implements KeyListener{
 		//more than two being pressed at the same time
 		shiftCombination = false; 
 		rectTool = false;
+		//circleTool = false;
+		controlCombination = false;
 		fillTool = false;
 	}
 

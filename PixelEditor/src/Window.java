@@ -1,5 +1,8 @@
 import java.awt.*;
 import java.awt.event.KeyListener;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.swing.*;
 
 import eventListeners.EventsWrapper;
@@ -29,7 +32,29 @@ public class Window extends JFrame{
 		this.setResizable(true);
 		this.setLayout(new GridLayout(1,2));
 		
-		drawPanel = new DrawPanel();
+		//choose the size
+		boolean wrongSize = false;
+		String height = "",width = "";
+		while(!wrongSize){ //checks if it is a valid input
+			width = JOptionPane.showInputDialog("Choose the width of the image");
+			Pattern pattern = Pattern.compile("[^0-9]");
+			Matcher matcher = pattern.matcher(width);
+			if(!matcher.find())
+				wrongSize = true;
+			else
+				JOptionPane.showMessageDialog(null, "Incorrect width values");
+		}
+		wrongSize =  false;
+		while(!wrongSize){//checks if it is a valid input
+			height = JOptionPane.showInputDialog("Choose the height of the image");
+			Pattern pattern = Pattern.compile("[^0-9]");
+			Matcher matcher = pattern.matcher(height);
+			if(!matcher.find())
+				wrongSize = true;
+			else
+				JOptionPane.showMessageDialog(null, "Incorrect height values");
+		}
+		drawPanel = new DrawPanel(Integer.parseInt(width),Integer.parseInt(height));
 		this.add(drawPanel);
 		this.add(new ChooseColorPanel());
 
@@ -39,7 +64,6 @@ public class Window extends JFrame{
 		addEventToAllComponents(this,new KeyboardHandler());
 		this.setVisible(true);
 	}
-
 	
 	/**
 	 * 
