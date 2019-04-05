@@ -2,14 +2,11 @@
 <h2>Pixel Art Software</h2>
  
 This is a Pixel Art Software written in <b>java</b>. 
-<p>This software also ables you to convert the pixel art into <b>raw</b> ppm files. This is still in an early stage so there are almost no features. Features that are not implemented yet:
+<p>This software also ables you to convert the pixel art into a png file format. This is still in an early stage so there are almost no features. Features that are not implemented yet:
 <br>
 -Circle
 <br>
 -Stroke tool
-<br>
--Convert to ppm
-</p>
 
 <p>
 <h2> How to use </h2>
@@ -24,4 +21,10 @@ Shift + Left Mouse Drag: Rectangle tool
 B + Left Mouse Click: Fill Tool (bucket tool)
 <br>
 Mouse Wheel: zoom in and out
+<br>
+Ctrl + z: Undo (it might bug sometimes)
+<br>
+Ctrl + y: Redo (it might bug sometimes)
+<br>
+Ctrl + s: Save to png
 </p>
