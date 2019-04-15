@@ -25,9 +25,6 @@ public class MouseMotionHandler extends EventsWrapper implements MouseMotionList
 			//we only need to add the WHOLE alteration, that is:
 			//all the pixels changed after the release of the mouse
 			drawPanel.setPixel(event);
-
-
-
 	}
 
 	@Override

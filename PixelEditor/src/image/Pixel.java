@@ -1,5 +1,7 @@
 package image;
 
+import java.awt.Color;
+
 /**
  * This class represents a basic pixel. A pixel is composed by 4 integers
  * Every integer has a value between 0 and 255
@@ -169,5 +171,14 @@ public class Pixel implements Cloneable{
 	@Override
 	public String toString(){
 		return "Red: " + red + " Green: " + green + " Blue: " + blue + " Alpha: " + alpha;
+	}
+	
+	/**
+	 * 
+	 * @return the rgb of this pixel
+	 * @since 1.0
+	 */
+	public int getRGB(){
+		return new Color(red,green,blue,alpha).getRGB();
 	}
 }

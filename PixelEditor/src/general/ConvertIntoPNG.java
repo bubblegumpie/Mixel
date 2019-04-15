@@ -39,7 +39,11 @@ public abstract class ConvertIntoPNG {
 					image.setRGB(i, j, color);
 				}
 			}
-			ImageIO.write(image, "PNG", new File(outputPath));
+			File f = new File(outputPath);
+			ImageIO.write(image, "PNG",f);
+			JOptionPane.showMessageDialog(null, "The image was saved in " +
+			 "\n" + f.getAbsolutePath());
+			
 		} catch (IOException e) {
 			JOptionPane.showConfirmDialog(location, "An error has occurred while "
 					+ "saving the image");

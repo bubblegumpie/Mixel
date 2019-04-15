@@ -37,22 +37,22 @@ public class Window extends JFrame{
 		String height = "",width = "";
 		while(!wrongSize){ //checks if it is a valid input
 			width = JOptionPane.showInputDialog("Choose the width of the image");
-			Pattern pattern = Pattern.compile("[^0-9]");
+			Pattern pattern = Pattern.compile("[^0-9]|^$");
 			Matcher matcher = pattern.matcher(width);
 			if(!matcher.find())
 				wrongSize = true;
 			else
-				JOptionPane.showMessageDialog(null, "Incorrect width values");
+				JOptionPane.showMessageDialog(null, "Please only insert numbers");
 		}
 		wrongSize =  false;
 		while(!wrongSize){//checks if it is a valid input
 			height = JOptionPane.showInputDialog("Choose the height of the image");
-			Pattern pattern = Pattern.compile("[^0-9]");
+			Pattern pattern = Pattern.compile("[^0-9]|^$");
 			Matcher matcher = pattern.matcher(height);
 			if(!matcher.find())
 				wrongSize = true;
 			else
-				JOptionPane.showMessageDialog(null, "Incorrect height values");
+				JOptionPane.showMessageDialog(null, "Please only insert numbers");
 		}
 		drawPanel = new DrawPanel(Integer.parseInt(width),Integer.parseInt(height));
 		this.add(drawPanel);
@@ -60,7 +60,6 @@ public class Window extends JFrame{
 
 		//all of the handlers reference to this draw panel
 		EventsWrapper.drawPanel = drawPanel; 
-
 		addEventToAllComponents(this,new KeyboardHandler());
 		this.setVisible(true);
 	}

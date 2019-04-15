@@ -43,19 +43,19 @@ public class MouseClickHandler extends EventsWrapper implements MouseListener{
 			//Rect tool
 			Point aux = drawPanel.getPixelPositionBasedOnMouse();
 			rectToolStartingPoint = new Point(aux.x,aux.y);
+			//makes changes possible
+			drawPanel.handleUndoStackChange(true);
 			rectTool = true;
 		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent event) {
-		if(rectTool){
-			drawPanel.handleUndoStackChange(true);
+		if(rectTool)
 			drawPanel.rectTool(rectToolStartingPoint);
-		}else if(mouseBeingPressed)
-			//only puts into the stacks the whole alteration during the mouse drag
-			drawPanel.handleUndoStackChange(true);
+		
 		rectTool = false;
 		mouseBeingPressed = false;
+		drawPanel.handleUndoStackChange(true);
 	}
 }

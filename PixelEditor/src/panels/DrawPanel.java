@@ -94,7 +94,7 @@ public class DrawPanel extends JComponent{
 				pixels[i][j] = new Pixel(255,255,255,0); // transparent		
 		}
 
-		previousChanges.push(PixelArrays.copyPixelMatrix(pixels));
+		//previousChanges.push(PixelArrays.copyPixelMatrix(pixels));
 
 		this.addMouseListener(new MouseClickHandler());
 		this.addMouseMotionListener(new MouseMotionHandler());
@@ -427,7 +427,7 @@ public class DrawPanel extends JComponent{
 	 * @since 1.0
 	 */
 	public void handleUndoStackChange(boolean add){
-		if(add){
+		if(add){ //painting the pixels
 			if(previousChanges.size() == 0){//adds the initial state
 				Pixel[][] newPixels = new Pixel[pixels.length][pixels[0].length];
 				for(int i = 0;i < pixels.length;i++){
@@ -436,11 +436,9 @@ public class DrawPanel extends JComponent{
 					}
 				}
 				previousChanges.push(PixelArrays.copyPixelMatrix(newPixels));
-			}else{
-				//put the last one into the stack
+			}else
 				previousChanges.push(PixelArrays.copyPixelMatrix(pixels));
-			}
-
+			
 		}else{ //undo
 			if(previousChanges.size() > 0){
 				redoStack.push(PixelArrays.copyPixelMatrix(pixels));
@@ -585,7 +583,7 @@ public class DrawPanel extends JComponent{
 	 */
 	public void rectTool(Point startingPoint){
 		Point destination = getPixelPositionBasedOnMouse();
-		//resets the pixels in order to let the user see the changes of using
+		//resets the pixels in order to let the user see the changes of
 		//the rect tool
 		pixels = PixelArrays.copyPixelMatrix(previousChanges.peek());
 

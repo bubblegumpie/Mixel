@@ -25,7 +25,7 @@ public class ChooseColorPanel extends JPanel{
 	private JSlider redSlider,greenSlider,blueSlider,alphaSlider;
 	private JTextField currentRed,currentGreen,currentBlue,currentAlpha;
 	private static Pixel pixel; //represents the current color (rgba format)
-
+		
 	/**
 	 * Creates the panel that allows to choose a color in rgb format.
 	 * This panel can be added to a JFrame or JPanel.
