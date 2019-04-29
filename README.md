@@ -2,7 +2,7 @@
 <h2>Pixel Art Software</h2>
  
 This is a Pixel Art Software written in <b>java</b>. 
-<p>This software also ables you to convert the pixel art into a png file format. This is still in an early stage so there are almost no features. Features that are not implemented yet:
+<p>This software converts the pixel art into a png file format. This is still in an early stage so there are almost no features. Features that are not implemented yet:
 <br>
 -Circle
 <br>
